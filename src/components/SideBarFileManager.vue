@@ -119,6 +119,7 @@ export default {
         onChange (ev) {
             const fileinput = document.getElementById('choosefile')
             this.process(fileinput.files[0])
+            this.uploadFile()
         },
         onDrop (ev) {
             // Prevent default behavior (Prevent file from being opened)
@@ -130,6 +131,7 @@ export default {
                     if (ev.dataTransfer.items[i].kind === 'file') {
                         const file = ev.dataTransfer.items[i].getAsFile()
                         this.process(file)
+                        this.uploadFile()
                     }
                 }
             } else {
@@ -178,7 +180,12 @@ export default {
             request.onload = () => {
                 if (request.status >= 200 && request.status < 400) {
                     this.uploadpercentage = 100
-                    this.url = request.responseText
+                    try {
+                        const resp = JSON.parse(request.responseText)
+                        this.url = resp.session_id
+                    } catch (e) {
+                        this.url = request.responseText
+                    }
                 } else {
                     alert('error! ' + request.status)
                     this.uploadpercentage = 100
