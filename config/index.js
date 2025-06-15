@@ -19,8 +19,12 @@ module.exports = {
         target:"http://localhost:8001/eniro",
         secure:"false"
     },
-      "/uploaded/*":{
-        target:"http://localhost:8001/uploaded",
+    "/uploaded/*":{
+      target:"http://localhost:8001/uploaded",
+      secure:"false"
+    },
+    "/api/*":{
+        target:"http://localhost:8001",
         secure:"false"
       },
     },
