@@ -1,12 +1,14 @@
 <template>
     <div class="chat-screen">
-      <div v-for="(msg, i) in messages" :key="i" class="chat-message">
-        <b>{{ msg.role }}:</b> {{ msg.content }}
+      <h3>Chat With Your Flight Log</h3>
+      <div v-for="msg in messages" :key="msg.id" class="message">
+        <p><strong>{{ msg.role }}:</strong> {{ msg.content }}</p>
       </div>
-      <form @submit.prevent="sendMessage">
-        <input v-model="input" placeholder="Ask something about the flight…" />
-        <button type="submit">Send</button>
-      </form>
+      <input
+        v-model="userMessage"
+        @keyup.enter="sendMessage"
+        placeholder="Ask something..."
+      />
     </div>
   </template>
   
@@ -15,42 +17,56 @@
     props: ['sessionId'],
     data() {
       return {
-        input: '',
+        userMessage: '',
         messages: []
-      }
+      };
     },
     methods: {
       async sendMessage() {
-        const userMsg = { role: 'user', content: this.input };
-        this.messages.push(userMsg);
-        this.input = '';
+        if (!this.userMessage) return;
   
-        const res = await fetch(`/api/chat`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            session_id: this.sessionId,
-            message: userMsg.content
-          })
-        });
-        const data = await res.json();
-        this.messages.push({ role: 'assistant', content: data.response });
+        const body = {
+          session_id: this.sessionId,
+          message: this.userMessage
+        };
+  
+        try {
+          const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+          });
+  
+          const result = await res.json();
+  
+          this.messages.push({ role: 'You', content: this.userMessage });
+          this.messages.push({ role: 'AI', content: result.response });
+  
+          this.userMessage = '';
+        } catch (err) {
+          console.error('Chat error:', err);
+        }
       }
     }
-  }
+  };
   </script>
   
   <style scoped>
   .chat-screen {
     padding: 1rem;
-    background: #f9f9f9;
+    background: #f8f8f8;
+    border: 1px solid #ddd;
   }
-  .chat-message {
-    margin-bottom: 0.5rem;
+  
+  .message {
+    margin-bottom: 10px;
   }
+  
   input {
-    width: 80%;
-    margin-right: 0.5rem;
+    width: 100%;
+    padding: 8px;
   }
   </style>
   

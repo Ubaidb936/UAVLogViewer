@@ -19,6 +19,10 @@
         <div class="container-fluid" style="height: 100%; overflow: hidden;">
 
             <sidebar/>
+            <SideBarFileManager @upload-success="handleUploadSuccess" />
+
+              <!-- Show chat only if showChat is true -->
+             <ChatScreen v-if="showChat" :sessionId="sessionId" />
 
             <main class="col-md-9 ml-sm-auto col-lg-10 flex-column d-sm-flex" role="main">
 
@@ -46,6 +50,8 @@ import isOnline from 'is-online'
 import Plotly from '@/components/Plotly.vue'
 import CesiumViewer from '@/components/CesiumViewer.vue'
 import Sidebar from '@/components/Sidebar.vue'
+import SideBarFileManager from '@/components/SideBarFileManager.vue'
+import ChatScreen from '@/components/ChatScreen.vue'
 import TxInputs from '@/components/widgets/TxInputs.vue'
 import ParamViewer from '@/components/widgets/ParamViewer.vue'
 import MessageViewer from '@/components/widgets/MessageViewer.vue'
@@ -78,7 +84,9 @@ export default {
     data () {
         return {
             state: store,
-            dataExtractor: null
+            dataExtractor: null,
+            showChat: false,
+            sessionId: null
         }
     },
     methods: {
@@ -226,7 +234,12 @@ export default {
                 this.state.colors.push(new Color(rgba[0], rgba[1], rgba[2]))
                 // this.translucentColors.push(new Cesium.Color(rgba[0], rgba[1], rgba[2], 0.1))
             }
+        },
+        handleUploadSuccess (sessionId) {
+            this.sessionId = sessionId
+            this.showChat = true
         }
+
     },
     components: {
         Sidebar,
@@ -234,6 +247,8 @@ export default {
         CesiumViewer,
         AtomSpinner,
         TxInputs,
+        ChatScreen,
+        SideBarFileManager,
         ParamViewer,
         MessageViewer,
         DeviceIDViewer,
