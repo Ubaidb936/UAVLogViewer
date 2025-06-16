@@ -3,6 +3,7 @@ import uuid
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+from pymavlink import mavutil
 import openai
 
 app = FastAPI()
@@ -22,14 +23,37 @@ def parse_log(file_path: Path):
     # extract telemetry info you want to feed to the LLM.
     return {"summary": "example telemetry data"}
 
-@app.post("/upload")
+@app.post("/")
 async def upload_log(file: UploadFile = File(...)):
-    """Accepts a log file upload and returns a new session ID."""
+    """Accepts a .tlog file upload, parses it with pymavlink, and returns a session ID."""
     session_id = uuid.uuid4().hex
     dest = UPLOAD_DIR / f"{session_id}_{file.filename}"
+
+    # Save uploaded file
     with dest.open("wb") as f:
         f.write(await file.read())
+
+    # Parse the .tlog file using pymavlink
+    try:
+        print(f"\n📦 Parsing {dest.name}...\n")
+        mav = mavutil.mavlink_connection(str(dest))
+        count = 0
+
+        while True:
+            msg = mav.recv_match(blocking=False)
+            if msg is None:
+                break
+            print(msg)
+            count += 1
+            if count >= 20:  # Limit to first 20 messages for preview
+                print(f"...({count} messages printed)")
+                break
+    except Exception as e:
+        print(f"❌ Error parsing file: {e}")
+
+    # Store session info
     SESSIONS[session_id] = {"history": [], "file": dest}
+
     return {"session_id": session_id}
 
 @app.get("/uploaded/{session_id}")
