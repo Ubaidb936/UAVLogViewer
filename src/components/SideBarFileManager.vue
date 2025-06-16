@@ -183,6 +183,7 @@ export default {
                     try {
                         const resp = JSON.parse(request.responseText)
                         this.url = resp.session_id
+                        this.$emit('upload-success', this.url)
                     } catch (e) {
                         this.url = request.responseText
                     }
